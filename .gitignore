@@ -1,0 +1,16 @@
+#  ignore all .pyc files
+__pycache__/
+
+# ignore all migrations
+migrations/
+
+# ignore all virtual environments
+venv/
+env/
+
+# ignore all database files
+db.sqlite3
+
+# ignore all static files
+staticfiles/
+
