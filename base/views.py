@@ -7,10 +7,10 @@ from .forms import RoomForm
 
 
 def home(request):
+    q = request.GET.get('q') if request.GET.get('q') != None else ''
 
-    q = request.GET.get('q')
-
-    rooms = Room.objects.filter(topic__name=q) # topic__name is used to filter the rooms based on the topic name
+    rooms = Room.objects.filter(topic__name__icontains=q) # topic__name is used to filter the rooms based on the topic name,
+                                                          # __icontains is used to filter the rooms based on the topic name and is case insensitive
     topics = Topic.objects.all()
 
     context = {'rooms':rooms, 'topics':topics}
