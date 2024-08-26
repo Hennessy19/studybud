@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from .models import Room, Topic
+from .models import Room, Topic, Message
 from .forms import RoomForm
 from django.db.models import Q  # this is provided by django to help with and | or searches bassing on multiple params
 from django.contrib.auth.models import User
@@ -55,7 +55,7 @@ def registerPage(request):
         else:
             messages.error(request, "An error occurred during registration")
 
-    context = {'form':form}
+    context = {'form':form, 'page':page}
     return render(request, 'base/login_register.html', context)
 
 
@@ -81,7 +81,20 @@ def home(request):
 
 def room(request,pk):
     room = Room.objects.get(id=pk)
-    context = {"room":room}
+    room_messages = room.message_set.all().order_by('-created') # this will get all the messages for the room, order them by the created date and time and pass them to the template    
+    participants = room.participants.all()
+
+    if request.method == "POST":
+        message = Message.objects.create(
+            user = request.user,
+            room = room,
+            body = request.POST.get('body') # this will get the message from the form from the field with the name body
+
+        )
+        room.participants.add(request.user) # this will add the user to the participants list
+        return redirect("room", pk=room.id)
+
+    context = {"room":room, "room_messages":room_messages, "participants":participants}
     return render(request, 'base/room.html',context)
 
 
@@ -121,7 +134,7 @@ def updateRoom(request,pk):
 
 
 @login_required(login_url='login')
-def deleteRoom(request,pk):
+def deleteRoom(request,pk): #this deletes a room
     room =Room.objects.get(id=pk)
 
     if request.user != room.host:
@@ -131,3 +144,15 @@ def deleteRoom(request,pk):
         room.delete()
         return redirect('home') 
     return render(request, 'base/delete.html',{'obj':room}) # this will pass the form to the template
+
+@login_required(login_url='login')
+def deleteMessage(request,pk): # this will delete a message
+    message  =Message.objects.get(id=pk)
+
+    if request.user != message.user:
+        return HttpResponse("You are not allowed here!!!!")
+    
+    if request.method == "POST":
+        message.delete()
+        return redirect('home') 
+    return render(request, 'base/delete.html',{'obj':message}) # this will pass the form to the template

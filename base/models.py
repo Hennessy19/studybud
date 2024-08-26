@@ -8,7 +8,7 @@ class Room(models.Model):
     topic = models.ForeignKey('Topic', on_delete=models.SET_NULL, null=True) #when a topic gets deleted, set the room's topic to null, also we put the string 'Topic' in quotes because the Topic class is defined after the Room class
     name = models.CharField(max_length=200)
     description = models.TextField(null=True, blank=True) #null=True means that this field can exist as empty in the db, blank= True means it can be empty on saving
-    # participants =
+    participants = models.ManyToManyField(User, related_name='participants', blank=True) #many to many relationship with the User model, related_name is used to access the participants of a room
     updated = models.DateTimeField(auto_now=True) #auto_now takes a timestamp everytime the record is updated
     created = models.DateTimeField(auto_now_add=True) #auto_now_add takes a timestamp only for the first time the record is created
 
