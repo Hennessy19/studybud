@@ -7,14 +7,17 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required   # this is a decorator that will check if the user is logged in before they can access the view
+from django.contrib.auth.forms import UserCreationForm # this is a form that is provided by django to help with user registration
+
 # Create your views here.
 
 def loginPage(request):
+    page = 'login'
     if request.user.is_authenticated:  # this will check if the user is already logged in
             return redirect('home')
     
     if request.method == "POST":
-        username = request.POST.get('username')
+        username = request.POST.get('username').lower()  # this will convert the username to lowercase
         password = request.POST.get('password')
 
         try:
@@ -29,12 +32,32 @@ def loginPage(request):
         else:
             messages.error(request, "Username OR password is incorrect")
 
-    context = {}
+    context = {'page':page}
     return render(request, 'base/login_register.html',context)
 
 def logoutUser(request):
     logout(request)
     return redirect('home')
+
+
+def registerPage(request):
+    page = 'register'
+    form = UserCreationForm()
+
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)  # this will save the form data to the user object but not to the db
+            user.username = user.username.lower()  # this will convert the username to lowercase
+            user.save()
+            login(request, user)  # adds the session to the db and the browser then logs the user in
+            return redirect('home')
+        else:
+            messages.error(request, "An error occurred during registration")
+
+    context = {'form':form}
+    return render(request, 'base/login_register.html', context)
+
 
 
 
