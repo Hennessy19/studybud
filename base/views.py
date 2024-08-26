@@ -3,8 +3,39 @@ from django.http import HttpResponse
 from .models import Room, Topic
 from .forms import RoomForm
 from django.db.models import Q  # this is provided by django to help with and | or searches bassing on multiple params
-
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required   # this is a decorator that will check if the user is logged in before they can access the view
 # Create your views here.
+
+def loginPage(request):
+    if request.user.is_authenticated:  # this will check if the user is already logged in
+            return redirect('home')
+    
+    if request.method == "POST":
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        try:
+            user = User.objects.get(username=username)
+        except:
+            messages.error(request, "User does not exist")  
+
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)  # adds the session to the db and the browser then logs the user in
+            return redirect('home')
+        else:
+            messages.error(request, "Username OR password is incorrect")
+
+    context = {}
+    return render(request, 'base/login_register.html',context)
+
+def logoutUser(request):
+    logout(request)
+    return redirect('home')
+
 
 
 def home(request):
@@ -23,13 +54,21 @@ def home(request):
 
     context = {'rooms':rooms, 'topics':topics, 'room_count':room_count}
     return render(request, 'base/home.html',context)
+
+
 def room(request,pk):
     room = Room.objects.get(id=pk)
     context = {"room":room}
     return render(request, 'base/room.html',context)
 
+
+@login_required(login_url='login')
 def createRoom(request):
     form = RoomForm()
+
+    if request.user != room.host:
+        return HttpResponse("You are not allowed here!!!!")
+    
     if request.method == "POST":
         form = RoomForm(request.POST) # this will get the data from the form
         if form.is_valid():
@@ -39,9 +78,14 @@ def createRoom(request):
     context = {"form":form} # this will pass the form to the template
     return render(request, 'base/room_form.html', context)
 
+
+@login_required(login_url='login') # this will check if the user is logged in before they can access the view
 def updateRoom(request,pk):
     room = Room.objects.get(id=pk)
     form = RoomForm(instance=room) # this will prefill the form with the data from the room
+
+    if request.user != room.host:
+        return HttpResponse("You are not allowed here!!!!")
     
     if request.method == "POST":
         form = RoomForm(request.POST, instance=room) # this will get the data from the form
@@ -52,8 +96,14 @@ def updateRoom(request,pk):
     context = {"form":form}
     return render(request, 'base/room_form.html', context)
 
+
+@login_required(login_url='login')
 def deleteRoom(request,pk):
     room =Room.objects.get(id=pk)
+
+    if request.user != room.host:
+        return HttpResponse("You are not allowed here!!!!")
+    
     if request.method == "POST":
         room.delete()
         return redirect('home') 
