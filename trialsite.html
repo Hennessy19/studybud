@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trial Site</title>
+
+    
+</head>
+<body>
+    <header>
+        <h1>Welcome to the Trial Site</h1>
+    </header>
+    <main>
+        <p>This is a basic HTML structure for our trial site.</p>
+        <div id="rooms-container">
+
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2023 Trial Site. All rights reserved.</p>
+    </footer>
+</body>
+<script>
+    let roomsContainer = document.getElementById('rooms-container')
+    let getRooms = async () =>{
+        let response = await fetch('http://localhost:8000/api/rooms/')
+        let rooms = await response.json()
+
+        for(let i=0; i<=rooms.length; i++){
+            let room =rooms[i];
+            let row = `<div>
+                            <h3>${room.name}</h3>
+                        </div>
+                        `
+            roomsContainer.innerHTML += row
+        }
+        console.log("Response  ", rooms)
+
+    }
+    
+    getRooms()
+</script>
+</html>
