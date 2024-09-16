@@ -24,7 +24,7 @@
 <script>
     let roomsContainer = document.getElementById('rooms-container')
     let getRooms = async () =>{
-        let response = await fetch('http://localhost:8000/api/rooms/')
+        let response = await fetch('http://localhost:8000/api/rooms/') //this fetches data from our django rest backend
         let rooms = await response.json()
 
         for(let i=0; i<=rooms.length; i++){
